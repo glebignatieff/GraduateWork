@@ -1,20 +1,3 @@
-##
-#
-# INVOKE Dalvik opcodes
-#
-# invoke-virtual 6e
-# invoke-super 6f
-# invoke-direct 70
-# invoke-static 71
-# invoke-interface 72
-# invoke-virtual/range 74
-# invoke-super/range 75
-# invoke-direct/range 76
-# invoke-static/range 77
-# invoke-interface/range 78
-#
-##
-
 from multiprocessing import Process, Queue
 import numpy as np
 import gc
@@ -37,32 +20,12 @@ def get_api_calls(dx):
         for method in methods_list:
             a = '%s' % method.get_class_name()
             b = '%s' % method.get_name()
-            # c = '%s' % method.get_descriptor()
+            c = '%s' % method.get_descriptor()
             # filter android api calls
             if a.startswith('Landroid'):
                 methods.append(a + '->' + b + c)
 
     return list(set(methods))
-
-
-def get_api_sequence(d, api_list):
-    api_sequence = []
-
-    # for every .dex file
-    for _d in d:
-        # for every code block in .dex
-        for code_block in _d.get_codes_item().code:
-            # for every instruction in code block
-            for ins in code_block.code.get_instuctions():
-                # we look for invoke-* instructions from 0x6e to 0x78
-                if 0x6e <= ins.get_op_value() <= 0x78:
-                    continue
-                operands = ins.get_operands()
-                api = operands[-1][-1]
-                if api in api_list:
-                    api_sequence.append(api)
-
-    return api_sequence
 
 
 class ApiExtractorProcess(Process):
@@ -132,33 +95,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # single_process_suffering()
     main()
-
-
-#####################################
-
-
-# def single_process_suffering():
-#     path = 'apks/'
-#     unique_apis = []
-
-#     log_file = open('log.txt', 'w')
-
-#     apks_list = get_files_paths(path)
-#     total_apks = len(apks_list)
-
-#     for apk in apks_list:
-#         try:
-#             _, _, dx = AnalyzeAPK(apk)
-#             apis = get_api_calls(dx)
-#             unique_apis.append(apis)
-#             update_progress(apks_list.index(apk), total_apks)
-#         except Exception as e:
-#             log_file.write(e + '\n')
-#             log_file.write(apk + '\n')
-
-#     log_file.close()
-
-#     with open('unique_apis.txt', 'w') as f:
-#         f.write('\n'.join(list(set(unique_apis))))
