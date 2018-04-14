@@ -24,26 +24,6 @@ import gc
 from androguard.misc import AnalyzeAPK
 from common import *
 
-test_apk = 'apks/malware/5afd15118715b8594e552a250ac82560.apk'
-
-
-# Gets Android framework api calls
-def get_api_calls(dx):
-    methods = []
-    external_classes = dx.get_external_classes()
-    for i in external_classes:
-        class_name = i.get_vm_class()
-        methods_list = class_name.get_methods()
-        for method in methods_list:
-            a = '%s' % method.get_class_name()
-            b = '%s' % method.get_name()
-            # c = '%s' % method.get_descriptor()
-            # filter android api calls
-            if a.startswith('Landroid'):
-                methods.append(a + '->' + b + c)
-
-    return list(set(methods))
-
 
 def get_api_sequence(d, api_list):
     api_sequence = []
@@ -65,35 +45,16 @@ def get_api_sequence(d, api_list):
     return api_sequence
 
 
-class ApiExtractorProcess(Process):
-    def __init__(self, n, apks_list, args=()):
-        super().__init__(target=self, args=args)
-        self.process_id = n
+class ApiSequenceExtractor(Process):
+    def __init__(self, process_id, apks_list, args):
+        super().__init__(target=self)
+        self.process_id = process_id
         self.apks_list = apks_list
         self.total_apks = len(apks_list)
         self.queue = args[0]
 
     def run(self):
-        unique_apis = []
-
-        for apk in self.apks_list:
-            try:
-                # APK() -> a ; DalvikVMFormat() -> d
-                # dx = Analysis(DalvikVMFormat(APK(apk)))
-                _, _, dx = AnalyzeAPK(apk)
-                apis = get_api_calls(dx)
-                not_unique = unique_apis + apis
-                unique_apis = list(np.unique(not_unique))
-                print('Process %d: %.1f%%' %
-                      (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
-                del dx
-                gc.collect()
-            except Exception as e:
-                print(e)
-                print('APK=========>', apk)
-
-        self.queue.put(unique_apis)
-        print('----------------> Process %d is done!' % self.process_id)
+        pass
 
 
 def main():

@@ -1,10 +1,8 @@
 from multiprocessing import Process, Queue
+from zipfile import ZipFile, BadZipfile
 import numpy as np
-import gc
-# from androguard.core.bytecodes.apk import APK
-# from androguard.core.bytecodes.dvm import DalvikVMFormat
-# from androguard.core.analysis.analysis import Analysis
-from androguard.misc import AnalyzeAPK
+from androguard.core.bytecodes.dvm import DalvikVMFormat
+from androguard.core.analysis.analysis import Analysis
 from common import *
 
 test_apk = 'apks/malware/5afd15118715b8594e552a250ac82560.apk'
@@ -29,9 +27,9 @@ def get_api_calls(dx):
 
 
 class ApiExtractorProcess(Process):
-    def __init__(self, n, apks_list, args=()):
+    def __init__(self, process_id, apks_list, args=()):
         super().__init__(target=self, args=args)
-        self.process_id = n
+        self.process_id = process_id
         self.apks_list = apks_list
         self.total_apks = len(apks_list)
         self.queue = args[0]
@@ -41,19 +39,42 @@ class ApiExtractorProcess(Process):
 
         for apk in self.apks_list:
             try:
-                # APK() -> a ; DalvikVMFormat() -> d
-                # dx = Analysis(DalvikVMFormat(APK(apk)))
-                _, _, dx = AnalyzeAPK(apk)
-                apis = get_api_calls(dx)
-                not_unique = unique_apis + apis
-                unique_apis = list(np.unique(not_unique))
-                print('Process %d: %.1f%%' %
-                      (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
-                del dx
-                gc.collect()
+                with ZipFile(apk) as zipfile:
+                    dexes = [dex for dex in zipfile.namelist() if dex.endswith('.dex')]
+                    dx = Analysis()
+                    for dex in dexes:
+                        with zipfile.open(dex) as dexfile:
+                            d = DalvikVMFormat(dexfile.read())
+                            dx.add(d)
+                    # creates cross references between classes, methods, etc.
+                    dx.create_xref()
+
+                    # extracting apis
+                    apis = get_api_calls(dx)
+                    not_unique = unique_apis + apis
+                    unique_apis = list(np.unique(not_unique))
+                    print('Process %d: %.1f%%' %
+                          (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
+            except BadZipfile as e:
+                print('Bad zip file =========> %s' % apk)
             except Exception as e:
-                print(e)
-                print('APK=========>', apk)
+                print('\n%s\n%s\n' % (apk, e))
+
+        # for apk in self.apks_list:
+        #     try:
+        #         # APK() -> a ; DalvikVMFormat() -> d
+        #         # dx = Analysis(DalvikVMFormat(APK(apk)))
+        #         _, _, dx = AnalyzeAPK(apk)
+        #         apis = get_api_calls(dx)
+        #         not_unique = unique_apis + apis
+        #         unique_apis = list(np.unique(not_unique))
+        #         print('Process %d: %.1f%%' %
+        #               (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
+        #         del dx
+        #         gc.collect()
+        #     except Exception as e:
+        #         print(e)
+        #         print('APK=========>', apk)
 
         self.queue.put(unique_apis)
         print('----------------> Process %d is done!' % self.process_id)
@@ -66,7 +87,7 @@ def main():
     total_apks = len(apks_list)
 
     # We assume that process_count | total_apks
-    process_count = 4
+    process_count = 10
     chunk_size = total_apks // process_count
     chunks = [
         apks_list[k:k + chunk_size]
