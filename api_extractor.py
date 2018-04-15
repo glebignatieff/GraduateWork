@@ -40,16 +40,18 @@ class ApiExtractorProcess(Process):
         for apk in self.apks_list:
             try:
                 with ZipFile(apk) as zipfile:
+                    # find .dex files inside apk
                     dexes = [dex for dex in zipfile.namelist() if dex.endswith('.dex')]
                     dx = Analysis()
+                    # analyze every .dex
                     for dex in dexes:
                         with zipfile.open(dex) as dexfile:
                             d = DalvikVMFormat(dexfile.read())
                             dx.add(d)
-                    # creates cross references between classes, methods, etc.
+                    # creates cross references between classes, methods, etc. for all the .dex
                     dx.create_xref()
 
-                    # extracting apis
+                    # extracting android apis
                     apis = get_api_calls(dx)
                     not_unique = unique_apis + apis
                     unique_apis = list(np.unique(not_unique))
@@ -59,22 +61,6 @@ class ApiExtractorProcess(Process):
                 print('Bad zip file =========> %s' % apk)
             except Exception as e:
                 print('\n%s\n%s\n' % (apk, e))
-
-        # for apk in self.apks_list:
-        #     try:
-        #         # APK() -> a ; DalvikVMFormat() -> d
-        #         # dx = Analysis(DalvikVMFormat(APK(apk)))
-        #         _, _, dx = AnalyzeAPK(apk)
-        #         apis = get_api_calls(dx)
-        #         not_unique = unique_apis + apis
-        #         unique_apis = list(np.unique(not_unique))
-        #         print('Process %d: %.1f%%' %
-        #               (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
-        #         del dx
-        #         gc.collect()
-        #     except Exception as e:
-        #         print(e)
-        #         print('APK=========>', apk)
 
         self.queue.put(unique_apis)
         print('----------------> Process %d is done!' % self.process_id)
