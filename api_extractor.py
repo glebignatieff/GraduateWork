@@ -8,24 +8,6 @@ from common import *
 test_apk = 'apks/malware/5afd15118715b8594e552a250ac82560.apk'
 
 
-# Gets Android framework api calls
-def get_api_calls(dx):
-    methods = []
-    external_classes = dx.get_external_classes()
-    for i in external_classes:
-        class_name = i.get_vm_class()
-        methods_list = class_name.get_methods()
-        for method in methods_list:
-            a = '%s' % method.get_class_name()
-            b = '%s' % method.get_name()
-            c = '%s' % method.get_descriptor()
-            # filter android api calls
-            if a.startswith('Landroid'):
-                methods.append(a + '->' + b + c)
-
-    return list(set(methods))
-
-
 class ApiExtractorProcess(Process):
     def __init__(self, process_id, apks_list, args=()):
         super().__init__(target=self, args=args)
@@ -33,6 +15,23 @@ class ApiExtractorProcess(Process):
         self.apks_list = apks_list
         self.total_apks = len(apks_list)
         self.queue = args[0]
+
+    # Gets Android framework api calls
+    def get_api_calls(self, dx):
+        methods = []
+        external_classes = dx.get_external_classes()
+        for i in external_classes:
+            class_name = i.get_vm_class()
+            methods_list = class_name.get_methods()
+            for method in methods_list:
+                a = '%s' % method.get_class_name()
+                b = '%s' % method.get_name()
+                c = '%s' % method.get_descriptor()
+                # filter android api calls
+                if a.startswith('Landroid'):
+                    methods.append(a + '->' + b + c)
+
+        return list(set(methods))
 
     def run(self):
         unique_apis = []
@@ -52,7 +51,7 @@ class ApiExtractorProcess(Process):
                     dx.create_xref()
 
                     # extracting android apis
-                    apis = get_api_calls(dx)
+                    apis = self.get_api_calls(dx)
                     not_unique = unique_apis + apis
                     unique_apis = list(np.unique(not_unique))
                     print('Process %d: %.1f%%' %
