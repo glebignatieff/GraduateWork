@@ -99,6 +99,8 @@ def main():
     with open('unique_apis.txt', 'w') as f:
         f.write('\n'.join(api_list))
 
+    print('Done.')
+
 
 if __name__ == '__main__':
     main()
