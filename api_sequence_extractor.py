@@ -1,3 +1,20 @@
+##
+#
+# INVOKE Dalvik opcodes
+#
+# invoke-virtual 6e
+# invoke-super 6f
+# invoke-direct 70
+# invoke-static 71
+# invoke-interface 72
+# invoke-virtual/range 74
+# invoke-super/range 75
+# invoke-direct/range 76
+# invoke-static/range 77
+# invoke-interface/range 78
+#
+##
+
 from multiprocessing import Process, Queue
 from zipfile import ZipFile, BadZipfile
 import numpy as np
@@ -7,7 +24,7 @@ from common import *
 
 def get_unique_api_list():
     ret = []
-    with open('unique_apis.txt') as f:
+    with open('data/unique_apis.txt') as f:
         ret = list(map(str.strip, f.readlines()))
     return ret
 
