@@ -1,8 +1,6 @@
 import os
 import sqlite3
 from collections import OrderedDict
-from functools import total_ordering
-from enum import Enum
 
 import mmh3
 import numpy as np
@@ -66,22 +64,13 @@ signature_perms = 'data/permissions/signature.txt'
 dangerous_perms = 'data/permissions/dangerous.txt'
 
 
-# Permission levels
-# TMP values
-@total_ordering
-class PermProtectionLevel(Enum):
-    UNKNOWN = 0
-    NORMAL = 1
-    SIGNATURE = 2
-    DANGEROUS = 3
-
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value < other.value
-        return NotImplemented
-
-    def __int__(self):
-        return self.value
+# Permission levels (tmp values)
+PERM_PROTECTION_LEVEL = {
+    'UNKNOWN':      0,
+    'NORMAL':       1,
+    'SIGNATURE':    2,
+    'DANGEROUS':    3
+}
 
 
 AXPLORER_APIS = {'min': 16, 'max': 25}
@@ -93,22 +82,22 @@ def get_perm_level_dict():
 
     with open(normal_perms) as f:
         for perm in f.read().strip().split('\n'):
-            ret[perm] = PermProtectionLevel.NORMAL
+            ret[perm] = PERM_PROTECTION_LEVEL['NORMAL']
 
     with open(signature_perms) as f:
         for perm in f.read().strip().split('\n'):
-            ret[perm] = PermProtectionLevel.SIGNATURE
+            ret[perm] = PERM_PROTECTION_LEVEL['SIGNATURE']
 
     with open(dangerous_perms) as f:
         for perm in f.read().strip().split('\n'):
-            ret[perm] = PermProtectionLevel.DANGEROUS
+            ret[perm] = PERM_PROTECTION_LEVEL['DANGEROUS']
 
     return ret
 
 
 def get_permission_level_by_api(cursor, api, api_level, perm_level_dict):
     query = "SELECT permission FROM {}_API_{} WHERE api='{}'"
-    max_perm_level = PermProtectionLevel.UNKNOWN
+    max_perm_level = PERM_PROTECTION_LEVEL['UNKNOWN']
 
     # axplorer query
     if api_level >= AXPLORER_APIS['min'] and api_level <= AXPLORER_APIS['max']:
