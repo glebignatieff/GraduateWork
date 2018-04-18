@@ -38,3 +38,11 @@ def is_dir(dirname):
         raise argparse.ArgumentTypeError(msg)
     else:
         return dirname
+
+
+# Returns list of unique apis
+def get_unique_api_list():
+    ret = []
+    with open('data/unique_apis.txt') as f:
+        ret = f.read().strip().split('\n')
+    return ret

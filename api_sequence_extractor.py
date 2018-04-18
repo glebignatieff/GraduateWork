@@ -22,13 +22,6 @@ from androguard.core.bytecodes.dvm import DalvikVMFormat
 from common import *
 
 
-def get_unique_api_list():
-    ret = []
-    with open('data/unique_apis.txt') as f:
-        ret = list(map(str.strip, f.readlines()))
-    return ret
-
-
 class ApiSequenceExtractorProcess(Process):
     def __init__(self, process_id, unique_apis, apks_list, args):
         super().__init__(target=self)
@@ -74,7 +67,7 @@ class ApiSequenceExtractorProcess(Process):
                             d = DalvikVMFormat(dexfile.read())
                             api_sequence += self.get_api_sequence(d, self.unique_apis)
                     # send apk's api sequence to the main process
-                    ret = {'apk': os.path.basename(apk), 'apis': api_sequence}
+                    ret = {'apk': apk, 'apis': api_sequence}
                     self.queue.put(ret)
                     print('Process %d: %.1f%%' %
                           (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
@@ -95,7 +88,15 @@ def main():
     unique_apis = get_unique_api_list()
 
     if not os.path.isdir(api_seq_dir):
-        os.mkdir(api_seq_dir)
+        os.makedirs(os.path.join(api_seq_dir, 'benign'))
+        os.mkdir(os.path.join(api_seq_dir, 'malware'))
+    else:
+        benign_path = os.path.join(api_seq_dir, 'benign')
+        malware_path = os.path.join(api_seq_dir, 'malware')
+        if not os.path.isdir(benign_path):
+            os.mkdir(benign_path)
+        if not os.path.isdir(malware_path):
+            os.mkdir(malware_path)
 
     # We assume that process_count | total_apks
     process_count = 10
@@ -113,7 +114,11 @@ def main():
 
     for _ in range(total_apks):
         ret = queue.get()
-        with open(os.path.join(api_seq_dir, ret['apk'] + '.txt'), 'w') as f:
+        if 'malware' in ret['apk']:
+            dest_dir = os.path.join(api_seq_dir, 'malware')
+        else:
+            dest_dir = os.path.join(api_seq_dir, 'benign')
+        with open(os.path.join(dest_dir, os.path.basename(ret['apk']) + '.txt'), 'w') as f:
             for api in ret['apis']:
                 f.write(api + '\n')
 

@@ -6,12 +6,6 @@ axplorer = 'mappings/axplorer/permissions/'
 pscout = 'mappings/PScout/permissions/'
 
 
-# Permissions
-normal_perms = 'data/permissions/normal.txt'
-signature_perms = 'data/permissions/signature.txt'
-dangerous_perms = 'data/permissions/dangerous.txt'
-
-
 PRIMITIVE_TYPES = {
     'void':     'V',
     'boolean':  'Z',
@@ -46,19 +40,6 @@ def to_smali_type(java_type):
     ret = ('[' * narrays) + smali_type
 
     return ret
-
-
-# def get_permissions():
-#     ret = {}
-
-#     with open(normal_perms) as f:
-#         ret['normal'] = f.read().split('\n')
-#     with open(dangerous_perms) as f:
-#         ret['dangerous'] = f.read().split('\n')
-#     with open(signature_perms) as f:
-#         ret['signature'] = f.read().split('\n')
-
-#     return ret
 
 
 def parse_pscout_line(line):
