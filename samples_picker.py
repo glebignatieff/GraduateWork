@@ -17,8 +17,8 @@ def main():
     src_path = args['src_path']
     dst_path = args['dst_path']
     samples_num = args['n_samples']
-    min_size = args['min_size']
-    max_size = args['max_size']
+    min_size = args['min_size'] * 1024
+    max_size = args['max_size'] * 1024
 
     files = get_files_paths(src_path)
     if min_size is not None:
