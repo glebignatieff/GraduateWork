@@ -26,6 +26,7 @@ android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND
 android.permission.REQUEST_DELETE_PACKAGES
 android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
 android.permission.REQUEST_INSTALL_PACKAGES
+android.permission.RESTART_PACKAGES
 android.permission.SET_ALARM
 android.permission.SET_WALLPAPER
 android.permission.SET_WALLPAPER_HINTS

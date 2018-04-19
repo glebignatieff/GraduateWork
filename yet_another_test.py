@@ -67,9 +67,10 @@ dangerous_perms = 'data/permissions/dangerous.txt'
 # Permission levels (tmp values)
 PERM_PROTECTION_LEVEL = {
     'UNKNOWN':      0,
-    'NORMAL':       1,
-    'SIGNATURE':    2,
-    'DANGEROUS':    3
+    'NO_LEVEL':     1,
+    'NORMAL':       2,
+    'SIGNATURE':    3,
+    'DANGEROUS':    4
 }
 
 
@@ -97,7 +98,11 @@ def get_perm_level_dict():
 
 def get_permission_level_by_api(cursor, api, api_level, perm_level_dict):
     query = "SELECT permission FROM {}_API_{} WHERE api='{}'"
-    max_perm_level = PERM_PROTECTION_LEVEL['UNKNOWN']
+
+    if api.startswith('Landroid'):
+        max_perm_level = PERM_PROTECTION_LEVEL['NO_LEVEL']
+    else:
+        max_perm_level = PERM_PROTECTION_LEVEL['UNKNOWN']
 
     # axplorer query
     if api_level >= AXPLORER_APIS['min'] and api_level <= AXPLORER_APIS['max']:

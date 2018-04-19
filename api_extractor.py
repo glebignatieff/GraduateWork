@@ -27,8 +27,8 @@ class ApiExtractorProcess(Process):
                 a = '%s' % method.get_class_name()
                 b = '%s' % method.get_name()
                 c = '%s' % method.get_descriptor()
-                # filter android api calls
-                if a.startswith('Landroid'):
+                # filter android and java api calls
+                if a.startswith('Landroid'):  # or a.startswith('Ljava'):
                     methods.append(a + '->' + b + c)
 
         return list(set(methods))

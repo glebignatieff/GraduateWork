@@ -21,6 +21,7 @@ android.permission.BIND_VPN_SERVICE
 android.permission.BIND_VR_LISTENER_SERVICE
 android.permission.BIND_WALLPAPER
 android.permission.CLEAR_APP_CACHE
+android.permission.GET_TASKS
 android.permission.MANAGE_DOCUMENTS
 android.permission.READ_VOICEMAIL
 android.permission.REQUEST_INSTALL_PACKAGES

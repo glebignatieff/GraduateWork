@@ -31,7 +31,7 @@ class ApiSequenceExtractorProcess(Process):
         self.total_apks = len(apks_list)
         self.queue = args[0]
 
-    def get_api_sequence(self, d, api_list):
+    def get_api_sequence(self, d):
         api_sequence = []
 
         # for every code block in .dex
@@ -44,7 +44,7 @@ class ApiSequenceExtractorProcess(Process):
                     operands = ins.get_operands()
                     # the last operand in the list is the method reference
                     api = operands[-1][-1]
-                    if api in api_list:
+                    if api in self.unique_apis:
                         if len(api_sequence) > 1:
                             # filter to many repetitions
                             if api_sequence[-1] == api and api_sequence[-2] == api:
@@ -57,6 +57,7 @@ class ApiSequenceExtractorProcess(Process):
     def run(self):
         for apk in self.apks_list:
             api_sequence = []
+            ret = {'apk': apk, 'apis': []}
             try:
                 with ZipFile(apk) as zipfile:
                     # find .dex files inside apk
@@ -65,9 +66,9 @@ class ApiSequenceExtractorProcess(Process):
                         # for every dex extract api sequence
                         with zipfile.open(dex) as dexfile:
                             d = DalvikVMFormat(dexfile.read())
-                            api_sequence += self.get_api_sequence(d, self.unique_apis)
+                            api_sequence += self.get_api_sequence(d)
                     # send apk's api sequence to the main process
-                    ret = {'apk': apk, 'apis': api_sequence}
+                    ret['apis'] = api_sequence
                     self.queue.put(ret)
                     print('Process %d: %.1f%%' %
                           (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
@@ -75,7 +76,10 @@ class ApiSequenceExtractorProcess(Process):
                 print('Bad zip file =========> %s' % apk)
             except Exception as e:
                 print('\n%s\n%s\n' % (apk, e))
+            finally:
+                self.queue.put(ret)
 
+        self.queue.close()
         print('----------------> Process %d is done!' % self.process_id)
 
 
