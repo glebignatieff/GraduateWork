@@ -1,9 +1,15 @@
 # from __future__ import division
 
-import sys
 import os
+import sys
+import pickle
 import argparse
+from math import sqrt
 
+import numpy as np
+import matplotlib.pyplot as plt
+# from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
 
 # Prints text progress bar
 def update_progress(current, total):
@@ -46,3 +52,47 @@ def get_unique_api_list():
     with open('data/unique_apis.txt') as f:
         ret = f.read().strip().split('\n')
     return ret
+
+
+# Shows rgb image
+#
+# Example on CIFAR10 dataset
+#
+# with open('data_batch_1', 'rb') as f:
+#     dataset = pickle.load(f, encoding='bytes')
+#
+# img0 = dataset[b'data'][np.random.randint(1, 10000)]
+# show_rgb_image(img0, (32, 32))
+#
+def show_rgb_image(img_row, size_tuple):
+    img = img_row.reshape(3, *size_tuple).transpose([1, 2, 0])
+    plt.imshow(img)
+    plt.show()
+
+
+# Loads serialized dictionary,
+# prepares it for learning and returns training and testing sets
+def load_dataset():
+    with open('data/dataset.bin', 'rb') as f:
+        dataset = pickle.load(f)
+
+    # prepare data for machine learning
+    n_channels = 3  # rgb
+    n_samples = dataset['data'].shape[0]
+    h_w = int(sqrt(dataset['data'].shape[1] / n_channels))  # height = width
+    img_size = (h_w, h_w)
+
+    # make it array of h_w x h_w RGB images
+    X = dataset['data'].reshape(n_samples, n_channels, *img_size).transpose(0, 2, 3, 1)
+    y = dataset['labels']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    return (X_train, y_train), (X_test, y_test)
+
+    # n_images = dataset['data'].shape[0]
+    # rand_img = dataset['data'][np.random.randint(1, n_images)]
+    # show_rgb_image(rand_img, (200, 200))
+
+
+if __name__ == '__main__':
+    load_dataset()

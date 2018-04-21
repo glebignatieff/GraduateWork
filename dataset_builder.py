@@ -148,7 +148,7 @@ def main():
     image_size = 200 * 200  # Let it be :D
 
     dataset = {}
-    dataset['labels'] = [int(i >= 1000) for i in range(len(api_seq_files))]
+    dataset['labels'] = np.array([int(i >= 1000) for i in range(len(api_seq_files))])
     dataset['filenames'] = []
 
     print('Building dataset...')
@@ -180,15 +180,17 @@ def main():
         else:
             dataset['data'] = np.vstack((dataset['data'], data_row))
 
-        dataset['filenames'].append(file)
+        dataset['filenames'].append(os.path.basename(file).rstrip('.txt'))
 
         update_progress(api_seq_files.index(file), len(api_seq_files))
     print()
 
-    with open('mydataset.bin', 'wb') as pickle_file:
+    dataset['filenames'] = np.array(dataset['filenames'])
+
+    with open('dataset.bin', 'wb') as pickle_file:
         pickle.dump(dataset, pickle_file)
 
-    print('Dataset dictionary object is dumped to mydataset.bin.')
+    print('Dataset dictionary object is dumped to dataset.bin.')
 
 
 if __name__ == '__main__':
