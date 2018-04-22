@@ -5,8 +5,6 @@ from androguard.core.bytecodes.dvm import DalvikVMFormat
 from androguard.core.analysis.analysis import Analysis
 from common import *
 
-test_apk = 'apks/malware/5afd15118715b8594e552a250ac82560.apk'
-
 
 class ApiExtractorProcess(Process):
     def __init__(self, process_id, apks_list, args=()):
@@ -28,7 +26,7 @@ class ApiExtractorProcess(Process):
                 b = '%s' % method.get_name()
                 c = '%s' % method.get_descriptor()
                 # filter android and java api calls
-                if a.startswith('Landroid'):  # or a.startswith('Ljava'):
+                if a.startswith('Landroid') or a.startswith('Ljava'):
                     methods.append(a + '->' + b + c)
 
         return list(set(methods))
@@ -71,12 +69,17 @@ def main():
     np.random.shuffle(apks_list)
     total_apks = len(apks_list)
 
-    # We assume that process_count | total_apks
+    # Give apks chunk for every process
     process_count = 10
     chunk_size = total_apks // process_count
     chunks = [
         apks_list[k:k + chunk_size]
         for k in range(0, total_apks, chunk_size)]
+
+    # If not process_count | total_apks -> last one gets more!
+    if len(chunks) > process_count:
+        chunks[-2] += chunks[-1]
+        del chunks[-1]
 
     queue = Queue()
     processes = [
