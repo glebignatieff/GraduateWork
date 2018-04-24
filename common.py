@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 # from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
+
 # Prints text progress bar
 def update_progress(current, total):
     amtDone = (current + 1) / total
@@ -51,6 +52,14 @@ def get_unique_api_list():
     ret = []
     with open('data/unique_apis.txt') as f:
         ret = f.read().strip().split('\n')
+    return ret
+
+
+# Returns set of unique apis
+def get_unique_api_set():
+    ret = {}
+    with open('data/unique_apis.txt') as f:
+        ret = set(f.read().strip().split('\n'))
     return ret
 
 

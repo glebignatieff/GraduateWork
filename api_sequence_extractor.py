@@ -31,6 +31,7 @@ class ApiSequenceExtractorProcess(Process):
         self.total_apks = len(apks_list)
         self.queue = args[0]
 
+    # Returns api sequence of a .dex file
     def get_api_sequence(self, d):
         api_sequence = []
 
@@ -89,7 +90,7 @@ def main():
     apks_list = get_files_paths(path)
     np.random.shuffle(apks_list)
     total_apks = len(apks_list)
-    unique_apis = get_unique_api_list()
+    unique_apis = get_unique_api_set()
 
     if not os.path.isdir(api_seq_dir):
         os.makedirs(os.path.join(api_seq_dir, 'benign'))
