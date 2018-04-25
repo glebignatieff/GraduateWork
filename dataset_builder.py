@@ -11,7 +11,7 @@ from math import ceil
 import mmh3
 import numpy as np
 
-from common import get_files_paths, get_unique_api_list, update_progress
+from common import get_files_paths, update_progress
 
 # Permissions paths
 normal_perms = 'data/permissions/normal.txt'
@@ -98,7 +98,7 @@ def get_permission_level_by_api(api, api_level, mapping_dict, perm_level_dict):
 
 def rgba2rgb(rgba_color):
     alpha = rgba_color[-1]
-    rgb_bg = [0xff, 0xff, 0xff]  # rgb background
+    rgb_bg = [0, 0, 0]  # rgb background
     rgb_color = [
         ceil((1 - alpha) * rgb_bg[0] + alpha * rgba_color[0]),    # 0 - r
         ceil((1 - alpha) * rgb_bg[1] + alpha * rgba_color[1]),    # 1 - g
