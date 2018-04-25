@@ -88,9 +88,17 @@ def main():
     path = 'apks/'
     api_seq_dir = 'api_sequences'
     apks_list = get_files_paths(path)
+
+    # CRUTCH
+    if os.path.isdir(api_seq_dir):
+        apks_done = [os.path.basename(apk) for apk in get_files_paths(api_seq_dir)]
+        apks_list = [apk for apk in apks_list if apk + '.txt' not in apks_done]
+
     np.random.shuffle(apks_list)
     total_apks = len(apks_list)
     unique_apis = get_unique_api_set()
+
+    print('%d apks found in total.' % total_apks)
 
     if not os.path.isdir(api_seq_dir):
         os.makedirs(os.path.join(api_seq_dir, 'benign'))
