@@ -1,0 +1,7 @@
+Malware:
+    AMD dataset: http://amd.arguslab.org/sharing
+    AndroMalShare: http://202.117.54.231:8080/#
+    
+Benign:
+    Android Drawer: https://www.androiddrawer.com/
+    Playdrone: https://archive.org/details/playdrone-apk-e8
