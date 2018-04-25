@@ -74,11 +74,11 @@ class ApiSequenceExtractorProcess(Process):
                     print('Process %d: %.1f%%' %
                           (self.process_id, ((self.apks_list.index(apk) + 1) / self.total_apks) * 100))
             except BadZipfile as e:
+                self.queue.put(ret)
                 print('Bad zip file =========> %s' % apk)
             except Exception as e:
-                print('\n%s\n%s\n' % (apk, e))
-            finally:
                 self.queue.put(ret)
+                print('\n%s\n%s\n' % (apk, e))
 
         self.queue.close()
         print('----------------> Process %d is done!' % self.process_id)
@@ -127,6 +127,8 @@ def main():
 
     for _ in range(total_apks):
         ret = queue.get()
+        if len(ret['apis']) == 0:
+            continue
         if 'malware' in ret['apk']:
             dest_dir = os.path.join(api_seq_dir, 'malware')
         else:
