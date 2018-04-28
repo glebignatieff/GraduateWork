@@ -94,15 +94,11 @@ def main():
         apks_done = [os.path.basename(apk) for apk in get_files_paths(api_seq_dir)]
         apks_list = [apk for apk in apks_list if os.path.basename(apk) + '.txt' not in apks_done]
 
-    print(apks_done[0])
-
     np.random.shuffle(apks_list)
     total_apks = len(apks_list)
     unique_apis = get_unique_api_set()
 
     print('%d apks found in total.' % total_apks)
-
-    return
 
     if not os.path.isdir(api_seq_dir):
         os.makedirs(os.path.join(api_seq_dir, 'benign'))
