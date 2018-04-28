@@ -191,10 +191,7 @@ class DatasetBuilderProcess(Process):
 
                 # save filename
                 dataset['filenames'].append(os.path.basename(file).rstrip('.txt'))
-
-                self.queue.put('done')
             except Exception as e:
-                self.queue.put('done')
                 print('\n%s\n%s\n' % (file, e))
 
         self.queue.put(dataset)
@@ -205,7 +202,7 @@ def main():
     mapping_dict = load_mapping_data()
     perm_level_dict = get_perm_level_dict()
     api_seq_files = get_files_paths('api_sequences/')
-    total_files = len(api_seq_files)
+    # total_files = len(api_seq_files)
     image_size = 384 * 384  # Let it be :D
 
     # Give apks chunk for every process
@@ -218,43 +215,56 @@ def main():
         DatasetBuilderProcess(i, chunks[i], mapping_dict, perm_level_dict,
                               image_size, (queue,)) for i in range(process_count)]
 
+    print('Building dataset...')
+
     for process in processes:
         process.start()
 
     # Progress bar
-    done = 0
-    for _ in range(total_files):
-        queue.get()
-        update_progress(done, total_files)
-        done += 1
+    # done = 0
+    # for _ in range(total_files):
+    #     queue.get()
+    #     update_progress(done, total_files)
+    #     done += 1
 
-    dataset = {}
-    dataset['labels'] = []
-    dataset['filenames'] = []
+    # dataset = {}
+    # dataset['labels'] = []
+    # dataset['filenames'] = []
 
     # Collect dataset chunks from every process
+    i_chunk = 0
     for _ in range(process_count):
         dataset_chunk = queue.get()
-        if dataset_chunk == 'done':
-            print('c=========================================3 FUCK!')
-        if 'data' not in dataset:
-            dataset['data'] = dataset_chunk['data']
-        else:
-            dataset['data'] = np.vstack((dataset['data'], dataset_chunk['data']))
-        dataset['labels'] += dataset_chunk['filenames']
-        dataset['filenames'] += dataset_chunk['filenames']
+        dataset_chunk['labels'] = np.array(dataset_chunk['labels'])
+        dataset_chunk['filenames'] = np.array(dataset_chunk['filenames'])
+
+        with open('dataset_chunk_%d.bin' % i_chunk, 'wb') as pickle_file:
+            pickle.dump(dataset_chunk, pickle_file)
+
+        i_chunk += 1
+
+        # if dataset_chunk == 'done':
+        #     print('c=========================================3 FUCK!')
+        # if 'data' not in dataset:
+        #     dataset['data'] = dataset_chunk['data']
+        # else:
+        #     dataset['data'] = np.vstack((dataset['data'], dataset_chunk['data']))
+        # dataset['labels'] += dataset_chunk['filenames']
+        # dataset['filenames'] += dataset_chunk['filenames']
 
     for process in processes:
         process.join()
 
-    dataset['labels'] = np.array(dataset['labels'])
-    dataset['filenames'] = np.array(dataset['filenames'])
+    # dataset['labels'] = np.array(dataset['labels'])
+    # dataset['filenames'] = np.array(dataset['filenames'])
 
     # Serialize dataset dictionary object
-    with open('dataset.bin', 'wb') as pickle_file:
-        pickle.dump(dataset, pickle_file)
+    # with open('dataset.bin', 'wb') as pickle_file:
+    #     pickle.dump(dataset, pickle_file)
 
-    print('Dataset dictionary object is dumped to dataset.bin.')
+    # print('Dataset dictionary object is dumped to dataset.bin.')
+
+    print('Done.')
 
 
 if __name__ == '__main__':
