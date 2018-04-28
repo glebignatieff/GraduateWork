@@ -71,15 +71,7 @@ def main():
 
     # Give apks chunk for every process
     process_count = 10
-    chunk_size = total_apks // process_count
-    chunks = [
-        apks_list[k:k + chunk_size]
-        for k in range(0, total_apks, chunk_size)]
-
-    # If not process_count | total_apks -> last one gets more!
-    if len(chunks) > process_count:
-        chunks[-2] += chunks[-1]
-        del chunks[-1]
+    chunks = split_list(apks_list, total_apks)
 
     queue = Queue()
     processes = [

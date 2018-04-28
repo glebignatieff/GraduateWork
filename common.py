@@ -63,6 +63,22 @@ def get_unique_api_set():
     return ret
 
 
+# Splits src_list in n_parts
+def split_list(src_list, n_parts):
+    n_total = len(src_list)
+    chunk_size = n_total // n_parts
+    chunks = [
+        src_list[k:k + chunk_size]
+        for k in range(0, n_total, chunk_size)]
+
+    # If not n_parts | n_total -> last one gets more!
+    if len(chunks) > n_parts:
+        chunks[-2] += chunks[-1]
+        del chunks[-1]
+
+    return chunks
+
+
 # Shows rgb image
 #
 # Example on CIFAR10 dataset
@@ -82,8 +98,10 @@ def show_rgb_image(img_row, size_tuple):
 # Loads serialized dictionary,
 # prepares it for learning and returns training and testing sets
 def load_dataset():
-    with open('data/dataset.bin', 'rb') as f:
+    with open('dataset.bin', 'rb') as f:
         dataset = pickle.load(f)
+
+    print(dataset['data'].shape)
 
     # prepare data for machine learning
     n_channels = 3  # rgb
@@ -99,8 +117,8 @@ def load_dataset():
     return (X_train, y_train), (X_test, y_test)
 
     # n_images = dataset['data'].shape[0]
-    # rand_img = dataset['data'][np.random.randint(1, n_images)]
-    # show_rgb_image(rand_img, (200, 200))
+    # rand_img = dataset['data'][np.random.randint(0, n_images)]
+    # show_rgb_image(rand_img, img_size)
 
 
 if __name__ == '__main__':

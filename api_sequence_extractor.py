@@ -111,12 +111,9 @@ def main():
         if not os.path.isdir(malware_path):
             os.mkdir(malware_path)
 
-    # We assume that process_count | total_apks
+    # Give apks chunk for every process
     process_count = 10
-    chunk_size = total_apks // process_count
-    chunks = [
-        apks_list[k:k + chunk_size]
-        for k in range(0, total_apks, chunk_size)]
+    chunks = split_list(apks_list, total_apks)
 
     queue = Queue()
     processes = [

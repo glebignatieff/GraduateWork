@@ -1,5 +1,5 @@
 ##
-## Building dataset
+#   Dataset builder with a single process
 ##
 
 import os
@@ -145,19 +145,24 @@ def main():
     api_seq_files = get_files_paths('api_sequences/')
     # benign_files = [file for file in api_seq_files if 'benign' in file]
     # malware_files = [file for file in api_seq_files if 'malware' in file]
-    image_size = 200 * 200  # Let it be :D
+    image_size = 384 * 384  # Let it be :D
 
     dataset = {}
-    dataset['labels'] = np.array([int(i >= 1000) for i in range(len(api_seq_files))])
+    # dataset['labels'] = np.array([int(i >= 1000) for i in range(len(api_seq_files))])
+    dataset['labels'] = []
     dataset['filenames'] = []
 
     print('Building dataset...')
 
     for file in api_seq_files:
+        # TMP!!
+        if os.path.getsize(file) > (7 << 20):   # to Mbs
+            continue
+
         with open(file) as f:
             apis = f.read().strip().split('\n')
 
-            # (image_size * rgb)
+            # (image_size * rgb channels)
             data_row = np.zeros(image_size * 3, dtype=np.uint8)
 
             cnt = 0
@@ -180,11 +185,17 @@ def main():
         else:
             dataset['data'] = np.vstack((dataset['data'], data_row))
 
+        if 'malware' in file:
+            dataset['labels'].append(1)
+        else:
+            dataset['labels'].append(0)
+
         dataset['filenames'].append(os.path.basename(file).rstrip('.txt'))
 
         update_progress(api_seq_files.index(file), len(api_seq_files))
     print()
 
+    dataset['labels'] = np.array(dataset['labels'])
     dataset['filenames'] = np.array(dataset['filenames'])
 
     with open('dataset.bin', 'wb') as pickle_file:
