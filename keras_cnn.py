@@ -49,7 +49,7 @@ model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
 
-early_stopping = EarlyStopping(monitor='value_loss')
+early_stopping = EarlyStopping(monitor='value_loss', patience=3, verbose=1)
 
 history = model.fit(x_train, y_train,
                     batch_size=batch_size,

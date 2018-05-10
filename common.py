@@ -97,7 +97,8 @@ def show_rgb_image(img_row, size_tuple):
 
 # Loads serialized dictionary,
 # prepares it for learning and returns training and testing sets
-def load_dataset():
+# !DEPRECATED!
+def load_dataset_small():
     with open('dataset.bin', 'rb') as f:
         dataset = pickle.load(f)
 
@@ -119,6 +120,43 @@ def load_dataset():
     # n_images = dataset['data'].shape[0]
     # rand_img = dataset['data'][np.random.randint(0, n_images)]
     # show_rgb_image(rand_img, img_size)
+
+
+def load_dataset():
+    g_X = None
+    g_y = None
+    chunk_files = os.listdir('dataset/')
+
+    # load data from every chunk
+    for chunk_file in chunk_files:
+        with open(os.path.join('dataset/', chunk_file), 'rb') as f:
+            dataset_chunk = pickle.load(f)
+
+            # prepare data for machine learning
+            n_channels = 3  # rgb
+            n_samples = dataset_chunk['data'].shape[0]
+            h_w = int(sqrt(dataset_chunk['data'].shape[1] / n_channels))  # height = width
+            img_size = (h_w, h_w)
+
+            # make it array of h_w x h_w RGB images
+            X = dataset_chunk['data'].reshape(n_samples, n_channels, *img_size).transpose(0, 2, 3, 1)
+            y = dataset_chunk['labels']
+
+            if g_X is None:
+                g_X = X
+            else:
+                g_X = np.vstack((g_X, X))
+
+            if g_y is None:
+                g_y = y
+            else:
+                g_y = np.concatenate((g_y, y))
+
+    # return g_X, g_y
+
+    X_train, X_test, y_train, y_test = train_test_split(g_X, g_y, test_size=0.333, random_state=42)
+
+    return (X_train, y_train), (X_test, y_test)
 
 
 if __name__ == '__main__':
