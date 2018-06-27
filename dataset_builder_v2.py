@@ -5,6 +5,7 @@
 import os
 import sqlite3
 import pickle
+import shutil
 from collections import OrderedDict
 from math import ceil
 from multiprocessing import Process, Queue
@@ -148,9 +149,18 @@ class DatasetBuilderProcess(Process):
         dataset['labels'] = []
         dataset['filenames'] = []
 
+        # create tmp dir for process and cd into it
+        if os.path.exists('tmp_dataset_builder'):
+            tmp_path = os.path.join('tmp_dataset_builder', str(self.process_id))
+            os.mkdir(tmp_path)
+            os.chdir(tmp_path)
+        else:
+            return
+
+        files_done = 0
         for file in self.file_list:
             try:
-                # TMP!!
+                # TMP!! Ignore files with size more than 7 mb
                 if os.path.getsize(file) > (7 << 20):   # to Mbs
                     continue
                 #
@@ -191,10 +201,27 @@ class DatasetBuilderProcess(Process):
 
                 # save filename
                 dataset['filenames'].append(os.path.basename(file).rstrip('.txt'))
+
+                files_done += 1
+
+                # save intermediate result
+                if files_done % 1000 == 0:
+                    with open('chunk_%d.pkl' % (files_done // 1000), 'wb') as pkl_file:
+                        pickle.dump(dataset, pkl_file)
+                    dataset.clear()
+                    dataset['labels'] = []
+                    dataset['filenames'] = []
             except Exception as e:
                 print('\n%s\n%s\n' % (file, e))
 
-        self.queue.put(dataset)
+            if files_done % 100 == 0:
+                print('Process %d progress: %d out of %d' % (self.process_id, files_done, self.total_files))
+
+        with open('chunk_%d.pkl' % ((files_done // 1000) + 1), 'wb') as pkl_file:
+            pickle.dump(dataset, pkl_file)
+
+        # self.queue.put(dataset)
+        # self.queue.put('done')
         print('----------------> Process %d is done!' % self.process_id)
 
 
@@ -206,7 +233,7 @@ def main():
     image_size = 384 * 384  # Let it be :D
 
     # Give apks chunk for every process
-    process_count = 15
+    process_count = 6
     chunks = split_list(api_seq_files, process_count)
 
     # Multiprocessing stuff
@@ -217,40 +244,23 @@ def main():
 
     print('Building dataset...')
 
+    if not os.path.exists('tmp_dataset_builder'):
+        os.mkdir('tmp_dataset_builder')
+
     for process in processes:
         process.start()
 
-    # Progress bar
-    # done = 0
-    # for _ in range(total_files):
-    #     queue.get()
-    #     update_progress(done, total_files)
-    #     done += 1
-
-    # dataset = {}
-    # dataset['labels'] = []
-    # dataset['filenames'] = []
-
     # Collect dataset chunks from every process
-    i_chunk = 0
-    for _ in range(process_count):
-        dataset_chunk = queue.get()
-        dataset_chunk['labels'] = np.array(dataset_chunk['labels'])
-        dataset_chunk['filenames'] = np.array(dataset_chunk['filenames'])
+    # i_chunk = 0
+    # for _ in range(process_count):
+    #     dataset_chunk = queue.get()
+    #     dataset_chunk['labels'] = np.array(dataset_chunk['labels'])
+    #     dataset_chunk['filenames'] = np.array(dataset_chunk['filenames'])
 
-        with open('dataset_chunk_%d.bin' % i_chunk, 'wb') as pickle_file:
-            pickle.dump(dataset_chunk, pickle_file)
+    #     with open('dataset_chunk_%d.bin' % i_chunk, 'wb') as pickle_file:
+    #         pickle.dump(dataset_chunk, pickle_file)
 
-        i_chunk += 1
-
-        # if dataset_chunk == 'done':
-        #     print('c=========================================3 FUCK!')
-        # if 'data' not in dataset:
-        #     dataset['data'] = dataset_chunk['data']
-        # else:
-        #     dataset['data'] = np.vstack((dataset['data'], dataset_chunk['data']))
-        # dataset['labels'] += dataset_chunk['filenames']
-        # dataset['filenames'] += dataset_chunk['filenames']
+    #     i_chunk += 1
 
     for process in processes:
         process.join()
@@ -263,6 +273,8 @@ def main():
     #     pickle.dump(dataset, pickle_file)
 
     # print('Dataset dictionary object is dumped to dataset.bin.')
+
+    # shutil.rmtree('tmp_dataset_builder')
 
     print('Done.')
 

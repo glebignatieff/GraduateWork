@@ -99,7 +99,7 @@ def show_rgb_image(img_row, size_tuple):
 # prepares it for learning and returns training and testing sets
 # !DEPRECATED!
 def load_dataset_small():
-    with open('dataset.bin', 'rb') as f:
+    with open('data/dataset.bin', 'rb') as f:
         dataset = pickle.load(f)
 
     print(dataset['data'].shape)
